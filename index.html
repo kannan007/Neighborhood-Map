@@ -6,11 +6,9 @@
 	</title>
 </head>
 <body>
-hi
 	<ul data-bind="template:{foreach: locationlist}">
 		<li data-bind="text: name,click: $parent.changelocation"></li>
 	</ul>
-	<p data-bind="text: currentlocation"></p>
 	<input placeholder="Search…" type="search" data-bind="value: query, valueUpdate: 'keyup'" autocomplete="off">
 	<div id="map" style="height: 700px; width: 700px;"></div>
 	<script type="text/javascript" src="lib/knockout.js"></script>

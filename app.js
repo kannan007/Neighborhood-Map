@@ -68,11 +68,10 @@ var ViewModel=function()
 	{
 		self.currentlocation(clickedlocation);
 		//hideListings();
-		showListings();
+		showListings(clickedlocation);
 	};
 	this.search=function(value)
 	{
-		//console.log(value);
 		self.locationlist.removeAll();
 		for(var x in favouritelocations)
 		{
@@ -81,7 +80,6 @@ var ViewModel=function()
 				self.locationlist.push(new seperatelocation(favouritelocations[x]));
 			}
 		}
-		//console.log(self.locationlist());
 	};
 	this.query.subscribe(this.search);
 };
@@ -114,21 +112,41 @@ function initMap() {
         	animation: google.maps.Animation.BOUNCE,
             id: i
         });
-          // Push the marker to our array of markers.
+        // Push the marker to our array of markers.
         markers.push(marker);
         //console.log(markers[0]);
         // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
+        	toggleBounce(this);
             populateInfoWindow(this, largeInfowindow);
         });
-          bounds.extend(markers[i].position);
+        bounds.extend(markers[i].position);
     }
-        // Extend the boundaries of the map for each marker
-        map.fitBounds(bounds);
+    setTimeout(function ()
+    {
+		stopbouncing();
+	}, 1300);
+    // Extend the boundaries of the map for each marker
+    map.fitBounds(bounds);
 };
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
 // on that markers position.
+
+function toggleBounce(marker) {
+	if (marker.getAnimation() !== null)
+	{
+      	marker.setAnimation(null);
+    }
+    else
+    {
+          marker.setAnimation(google.maps.Animation.BOUNCE);
+    }
+    setTimeout(function ()
+    {
+		marker.setAnimation(null);
+	}, 1000);
+};
 function populateInfoWindow(marker, infowindow) {
 	// Check to make sure the infowindow is not already opened on this marker.
 	if(infowindow.marker != marker)
@@ -142,28 +160,25 @@ function populateInfoWindow(marker, infowindow) {
 		});
 	}
 };
-function showListings()
+function showListings(value)
 {
-	var currentlocation=ViewModel.currentlocation();
-	console.log(currentlocation.name());
-	var locationname=currentlocation.name();
+	var locationname=value.name();
 	var bounds = new google.maps.LatLngBounds();
     // Extend the boundaries of the map for each marker and display the marker
     for (var i = 0; i < markers.length; i++)
     {
     	if(locationname==markers[i].title)
     	{
-    		console.log(markers[i].title);
     		markers[i].setMap(map);
       		bounds.extend(markers[i].position);
     	}
     }
     map.setZoom(10);
     map.fitBounds(bounds);
-}
-function hideListings() {
+};
+function stopbouncing() {
 	console.log("do something");
     for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
+        markers[i].setAnimation(null);
     }
-}
+};
