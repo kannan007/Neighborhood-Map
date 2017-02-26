@@ -64,11 +64,12 @@ var ViewModel=function()
 		self.locationlist.push(new seperatelocation(locations));
 	});
 	//console.log(this.locationlist());
-	this.currentlocation=ko.observable(this.locationlist()[0].name());
+	this.currentlocation=ko.observable(this.locationlist());
 	this.changelocation=function(clickedlocation)
 	{
-		self.currentlocation(clickedlocation.name());
-		//hidelisitings();
+		self.currentlocation(clickedlocation);
+		hideListings();
+		initMap();
 	};
 	this.search=function(value)
 	{
@@ -87,11 +88,12 @@ var ViewModel=function()
 };
 var ViewModel= new ViewModel();
 ko.applyBindings(ViewModel);
-var locationmap=ViewModel.locationlist();
 var map,geocoder;
 var markers=[];
 function initMap() {
-        // Constructor creates a new map - only center and zoom are required.
+    // Constructor creates a new map - only center and zoom are required.
+    var locationmap=ViewModel.currentlocation();
+    console.log(locationmap)
     geocoder = new google.maps.Geocoder();
     map = new google.maps.Map(document.getElementById('map'),
     {
@@ -100,11 +102,7 @@ function initMap() {
     });
     var largeInfowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
-	var marker = new google.maps.Marker({
-	    map: map,
-	    position: {lat: 13.023487, lng: 80.176716}
-	});
-	for (var i = 0; i<ViewModel.locationlist().length; i++)
+	for (var i = 0; i<locationmap.length; i++)
 	{
         // Get the position from the location array.
         var position = locationmap[i].position();
