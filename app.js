@@ -55,7 +55,6 @@ var seperatelocation=function(data)
 };
 var ViewModel=function()
 {
-	this.ans=ko.observable("Kannan");
 	var self=this;
 	this.query=ko.observable('');
 	this.locationlist=ko.observableArray();
@@ -68,8 +67,8 @@ var ViewModel=function()
 	this.changelocation=function(clickedlocation)
 	{
 		self.currentlocation(clickedlocation);
-		hideListings();
-		initMap();
+		//hideListings();
+		showListings();
 	};
 	this.search=function(value)
 	{
@@ -89,16 +88,16 @@ var ViewModel=function()
 var ViewModel= new ViewModel();
 ko.applyBindings(ViewModel);
 var map,geocoder;
+var locationmap=ViewModel.locationlist();
 var markers=[];
 function initMap() {
     // Constructor creates a new map - only center and zoom are required.
-    var locationmap=ViewModel.currentlocation();
-    console.log(locationmap)
+    console.log(locationmap);
     geocoder = new google.maps.Geocoder();
     map = new google.maps.Map(document.getElementById('map'),
     {
         center: {lat: 13.023487, lng: 80.176716},
-        zoom: 13
+        zoom: 5
     });
     var largeInfowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
@@ -112,12 +111,13 @@ function initMap() {
         	map: map,
         	position: position,
         	title: title,
-        	animation: google.maps.Animation.DROP,
+        	animation: google.maps.Animation.BOUNCE,
             id: i
         });
           // Push the marker to our array of markers.
         markers.push(marker);
-          // Create an onclick event to open an infowindow at each marker.
+        //console.log(markers[0]);
+        // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
             populateInfoWindow(this, largeInfowindow);
         });
@@ -131,7 +131,6 @@ function initMap() {
 // on that markers position.
 function populateInfoWindow(marker, infowindow) {
 	// Check to make sure the infowindow is not already opened on this marker.
-	console.log(infowindow);
 	if(infowindow.marker != marker)
 	{
 		infowindow.marker = marker;
@@ -143,6 +142,25 @@ function populateInfoWindow(marker, infowindow) {
 		});
 	}
 };
+function showListings()
+{
+	var currentlocation=ViewModel.currentlocation();
+	console.log(currentlocation.name());
+	var locationname=currentlocation.name();
+	var bounds = new google.maps.LatLngBounds();
+    // Extend the boundaries of the map for each marker and display the marker
+    for (var i = 0; i < markers.length; i++)
+    {
+    	if(locationname==markers[i].title)
+    	{
+    		console.log(markers[i].title);
+    		markers[i].setMap(map);
+      		bounds.extend(markers[i].position);
+    	}
+    }
+    map.setZoom(10);
+    map.fitBounds(bounds);
+}
 function hideListings() {
 	console.log("do something");
     for (var i = 0; i < markers.length; i++) {
