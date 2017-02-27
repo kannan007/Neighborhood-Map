@@ -1,8 +1,10 @@
 //Initialized my favourite locations in an array object
+var clientID='01JLACFGMSPJVDDDBCXZMKGJFCFAWZFQYBFJGPTXKZ0BJ00M';
+var clientSECRET='KMZIVAGXX1D04CYEH0GJRSIZXM5I32E5IATL0XKIP0GEPNYQ';
 var favouritelocations=
 [
 	{
-	    name: 'DLF IT Park',
+	    name: 'DLF IT Park Chennai',
 	    latlng: {
 	        lat: 13.023487,
 	        lng: 80.176716
@@ -11,7 +13,7 @@ var favouritelocations=
 	    id: 'DLF'
 	},
 	{
-	    name: 'Central Railway Station',
+	    name: 'Central Railway Station Chennai',
 	    latlng: {
 	        lat: 13.082335,
 	        lng: 80.275447
@@ -20,7 +22,7 @@ var favouritelocations=
 	    id: 'Railway Station'
 	},
 	{
-	    name: 'Olympia Tech Park',
+	    name: 'Olympia Tech Park Chennai',
 	    latlng: {
 	        lat: 13.014186,
 	        lng: 80.203677
@@ -29,7 +31,7 @@ var favouritelocations=
 	    id: 'Tech Park'
 	},
 	{
-	    name: 'IIT Madras',
+	    name: 'IIT Madras Chennai',
 	    latlng: {
 	        lat: 12.990842,
 	        lng: 80.233884
@@ -82,6 +84,7 @@ var ViewModel=function()
 			if(favouritelocations[x].name.toLowerCase().indexOf(value.toLowerCase())>=0)
 			{
 				self.locationlist.push(new seperatelocation(favouritelocations[x]));
+				rendermap();
 			}
 		}
 	};
@@ -93,20 +96,49 @@ var map,geocoder;
 var markers=[];
 function initMap() {
     // Constructor creates a new map - only center and zoom are required.
-    var locationmap=ViewModel.locationlist();
     geocoder = new google.maps.Geocoder();
     map = new google.maps.Map(document.getElementById('map'),
     {
         center: {lat: 13.023487, lng: 80.176716},
         zoom: 5
     });
-    var largeInfowindow = new google.maps.InfoWindow();
+    rendermap();
+};
+function rendermap()
+{
+	hideListings();
+	var locationmap=ViewModel.locationlist();
+	console.log(locationmap);
+	var largeInfowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
 	for (var i = 0; i<locationmap.length; i++)
 	{
         // Get the position from the location array.
         var position = locationmap[i].position();
         var title = locationmap[i].name();
+        var content='';
+        var api_error = setTimeout(function()
+        {
+			alert("Oops! Foursquare API failed to load");
+		},4000);
+		$.ajax(
+		{
+			type: 'GET',
+			dataType: "jsonp",
+			cache: false,
+			url: 'https://api.foursquare.com/v2/venues/search',
+			data: 'client_id='+clientID+'&client_secret='+clientSECRET+'&v=20130815&ll='+position.lat+','+position.lng+'&query='+title,
+			success: function(data)
+			{
+				clearTimeout(api_error);
+                //console.log(data.response.venues[0]);
+                //console.log(data.response.venues[0].name);
+				//Setting the info window data as the distance and check in count using the Foursquare API.
+				//item.marker.title =  data.response.venues[0].name ;
+				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's" + '</br>' + '	CheckinCount: ' + data.response.venues[0].stats.checkinsCount;
+			}
+		});
+		console.log(content);
         // Create a marker per location, and put into markers array.
         var marker = new google.maps.Marker({
         	map: map,
@@ -115,8 +147,11 @@ function initMap() {
         	animation: google.maps.Animation.BOUNCE,
             id: i
         });
+
         // Push the marker to our array of markers.
         markers.push(marker);
+        //map.panTo(markers[i].getPosition());
+        map.setCenter(markers[i].getPosition());
         // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
         	toggleBounce(this);
@@ -128,6 +163,7 @@ function initMap() {
     {
 		stopbouncing();
 	}, 1300);
+	//map.setZoom(5);
     // Extend the boundaries of the map for each marker
     map.fitBounds(bounds);
 };
@@ -160,7 +196,7 @@ function populateInfoWindow(marker, infowindow) {
 	if(infowindow.marker != marker)
 	{
 		infowindow.marker = marker;
-		infowindow.setContent('<div>' + marker.title + '</div>');
+		infowindow.setContent('<div>' + '<h2>' + marker.title + '</h2>' + marker.content + '</div>');
 		infowindow.open(map, marker);
 		// Make sure the marker property is cleared if the infowindow is closed.
 		infowindow.addListener('closeclick',function(){
@@ -173,6 +209,7 @@ function showListings(value)
 {
 	var locationname=value.name();
 	var bounds = new google.maps.LatLngBounds();
+	var largeInfowindow = new google.maps.InfoWindow();
     // Extend the boundaries of the map for each marker and display the marker
     for (var i = 0; i < markers.length; i++)
     {
@@ -180,6 +217,8 @@ function showListings(value)
     	{
     		markers[i].setMap(map);
     		map.setCenter(markers[i].getPosition());
+    		populateInfoWindow(markers[i],largeInfowindow);
+    		toggleBounce(markers[i]);
     	}
     	else
     	{
@@ -194,6 +233,12 @@ function stopbouncing() {
         markers[i].setAnimation(null);
     }
 };
+function hideListings()
+{
+	for (var i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    }
+}
 //to add class active to the list(Li item) which is clicked
 $("ul li").click(function()
 {
