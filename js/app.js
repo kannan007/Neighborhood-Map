@@ -10,7 +10,9 @@ var favouritelocations=
 	        lng: 80.176716
 	    },
 	    address: 'DLF IT Park Porur Chennai',
-	    id: 'DLF'
+	    id: 'DLF',
+	    className: '',
+	    content: ''
 	},
 	{
 	    name: 'Central Railway Station Chennai',
@@ -19,7 +21,9 @@ var favouritelocations=
 	        lng: 80.275447
 	    },
 	    address: 'Central Railway Station Chennai Tamilnadu',
-	    id: 'Railway Station'
+	    id: 'Railway Station',
+	    className: '',
+	    content: ''
 	},
 	{
 	    name: 'Olympia Tech Park Chennai',
@@ -28,7 +32,9 @@ var favouritelocations=
 	        lng: 80.203677
 	    },
 	    address: 'Olympia Tech Park Guindy Chennai',
-	    id: 'Tech Park'
+	    id: 'Tech Park',
+	    className: '',
+	    content: ''
 	},
 	{
 	    name: 'IIT Madras Chennai',
@@ -37,7 +43,9 @@ var favouritelocations=
 	        lng: 80.233884
 	    },
 	    address: 'IIT Guindy Chennai',
-	    id: 'IIT'
+	    id: 'IIT',
+	    className: '',
+	    content: ''
 	},
 	{
 	    name: 'Amazon Chennai',
@@ -46,7 +54,9 @@ var favouritelocations=
 	        lng: 80.243763
 	    },
 	    address: 'SP Infocity Perungudi Chennai',
-	    id: 'SP Infocity'
+	    id: 'SP Infocity',
+	    className: '',
+	    content: ''
 	}
 ];
 //An object constructor to create elements
@@ -56,22 +66,54 @@ var seperatelocation=function(data)
 	this.position=ko.observable(data.latlng);
 	this.address=ko.observable(data.address);
 	this.id=ko.observable(data.id);
+	this.className=ko.observable(data.className);
+	this.content=ko.observable(data.content);
 };
 //View Model
 var ViewModel=function()
 {
 	var self=this;
 	this.query=ko.observable('');
+	this.className=ko.observable('active')
 	this.locationlist=ko.observableArray();
 	//To push favourite locations into locationlist array
 	favouritelocations.forEach(function(locations)
 	{
 		self.locationlist.push(new seperatelocation(locations));
 	});
+	this.locationlist().forEach(function(item)
+	{
+		var api_error = setTimeout(function()
+        {
+			alert("Oops! Foursquare API failed to load");
+		},4000);
+		$.ajax(
+		{
+			type: 'GET',
+			dataType: "jsonp",
+			cache: false,
+			url: 'https://api.foursquare.com/v2/venues/search',
+			data: 'client_id='+clientID+'&client_secret='+clientSECRET+'&v=20130815&ll='+item.position().lat+','+item.position().lng+'&query='+item.name(),
+			success: function(data)
+			{
+				clearTimeout(api_error);
+                //console.log(data.response.venues[0]);
+                //console.log(data.response.venues[0].name);
+				//Setting the info window data as the distance and check in count using the Foursquare API.
+				//item.marker.title =  data.response.venues[0].name ;
+				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's CheckinCount: ' " + data.response.venues[0].stats.checkinsCount;
+				item.content=ko.observable(content);
+				console.log(item.content());
+			}
+		});
+	});
 	this.currentlocation=ko.observable(this.locationlist());
 	//changelocation function is defined when user clicks on any list items it will call showListings function with paramater(which is clicked item)
 	this.changelocation=function(clickedlocation)
 	{
+		clickedlocation.className('active');
+		console.log(clickedlocation.name());
+		console.log(clickedlocation.content());
 		self.currentlocation(clickedlocation);
 		showListings(clickedlocation);
 	};
@@ -108,7 +150,6 @@ function rendermap()
 {
 	hideListings();
 	var locationmap=ViewModel.locationlist();
-	console.log(locationmap);
 	var largeInfowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
 	for (var i = 0; i<locationmap.length; i++)
@@ -116,8 +157,8 @@ function rendermap()
         // Get the position from the location array.
         var position = locationmap[i].position();
         var title = locationmap[i].name();
-        var content='';
-        var api_error = setTimeout(function()
+        // Create a marker per location, and put into markers array.
+        /*var api_error = setTimeout(function()
         {
 			alert("Oops! Foursquare API failed to load");
 		},4000);
@@ -135,11 +176,11 @@ function rendermap()
                 //console.log(data.response.venues[0].name);
 				//Setting the info window data as the distance and check in count using the Foursquare API.
 				//item.marker.title =  data.response.venues[0].name ;
-				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's" + '</br>' + '	CheckinCount: ' + data.response.venues[0].stats.checkinsCount;
+				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's CheckinCount: ' " + data.response.venues[0].stats.checkinsCount;
+				locationmap[i].content=ko.observable(content);
 			}
-		});
-		console.log(content);
-        // Create a marker per location, and put into markers array.
+		});*/
+		var content=locationmap[i].content();
         var marker = new google.maps.Marker({
         	map: map,
         	position: position,
@@ -216,6 +257,7 @@ function showListings(value)
     	if(locationname==markers[i].title)
     	{
     		markers[i].setMap(map);
+    		//value.className('active');
     		map.setCenter(markers[i].getPosition());
     		populateInfoWindow(markers[i],largeInfowindow);
     		toggleBounce(markers[i]);
@@ -240,11 +282,11 @@ function hideListings()
     }
 }
 //to add class active to the list(Li item) which is clicked
-$("ul li").click(function()
+/*$("ul li").click(function()
 {
 	$("li").removeClass("active");
 	if(!$(this).hasClass("active"))
 	{
 		$(this).addClass("active");
 	}
-})
+})*/

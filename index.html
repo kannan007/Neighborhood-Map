@@ -15,11 +15,14 @@
 				<h1>My Favourite Places</h1>
 			</div>
 		</div>
+		<div data-bind="foreach: locationlist">
+			<p data-bind="text: content"></p>
+		</div>
 		<div class="row">
 			<div class="col-md-3 col-sm-3">
 				<input class="form-control" placeholder="Search…" type="search" data-bind="value: query, valueUpdate: 'keyup'" autocomplete="off">
-				<ul class="list-group" data-bind="template:{foreach: locationlist}">
-					<li class="list-group-item" data-bind="text: name,click: $parent.changelocation"></li>
+				<ul class="list-group" data-bind="foreach: locationlist">
+					<li class="list-group-item " data-bind="text: name,css: className,click: $parent.changelocation"></li>
 				</ul>
 			</div>
 			<div class="col-md-9 col-sm-9">
