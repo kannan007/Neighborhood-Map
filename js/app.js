@@ -81,7 +81,7 @@ var ViewModel=function()
 	{
 		self.locationlist.push(new seperatelocation(locations));
 	});
-	this.locationlist().forEach(function(item)
+	this.locationlist().forEach(function(item,index)
 	{
 		var api_error = setTimeout(function()
         {
@@ -97,13 +97,11 @@ var ViewModel=function()
 			success: function(data)
 			{
 				clearTimeout(api_error);
-                //console.log(data.response.venues[0]);
-                //console.log(data.response.venues[0].name);
 				//Setting the info window data as the distance and check in count using the Foursquare API.
 				//item.marker.title =  data.response.venues[0].name ;
 				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's CheckinCount: ' " + data.response.venues[0].stats.checkinsCount;
+				favouritelocations[index].content=content;
 				item.content=ko.observable(content);
-				console.log(item.content());
 			}
 		});
 	});
@@ -112,8 +110,6 @@ var ViewModel=function()
 	this.changelocation=function(clickedlocation)
 	{
 		clickedlocation.className('active');
-		console.log(clickedlocation.name());
-		console.log(clickedlocation.content());
 		self.currentlocation(clickedlocation);
 		showListings(clickedlocation);
 	};
@@ -144,7 +140,10 @@ function initMap() {
         center: {lat: 13.023487, lng: 80.176716},
         zoom: 5
     });
-    rendermap();
+    setTimeout(function ()
+    {
+		rendermap();
+	}, 1100);
 };
 function rendermap()
 {
@@ -157,34 +156,17 @@ function rendermap()
         // Get the position from the location array.
         var position = locationmap[i].position();
         var title = locationmap[i].name();
-        // Create a marker per location, and put into markers array.
-        /*var api_error = setTimeout(function()
-        {
-			alert("Oops! Foursquare API failed to load");
-		},4000);
-		$.ajax(
-		{
-			type: 'GET',
-			dataType: "jsonp",
-			cache: false,
-			url: 'https://api.foursquare.com/v2/venues/search',
-			data: 'client_id='+clientID+'&client_secret='+clientSECRET+'&v=20130815&ll='+position.lat+','+position.lng+'&query='+title,
-			success: function(data)
-			{
-				clearTimeout(api_error);
-                //console.log(data.response.venues[0]);
-                //console.log(data.response.venues[0].name);
-				//Setting the info window data as the distance and check in count using the Foursquare API.
-				//item.marker.title =  data.response.venues[0].name ;
-				content = '	Distance: '+ (data.response.venues[0].location.distance)/1000 + " km's CheckinCount: ' " + data.response.venues[0].stats.checkinsCount;
-				locationmap[i].content=ko.observable(content);
-			}
-		});*/
 		var content=locationmap[i].content();
+		console.log(content);
+		if(!(content.length>=0))
+		{
+			content="Foursquare failed to fetch results";
+		}
         var marker = new google.maps.Marker({
         	map: map,
         	position: position,
         	title: title,
+        	content: content,
         	animation: google.maps.Animation.BOUNCE,
             id: i
         });
@@ -281,12 +263,3 @@ function hideListings()
         markers[i].setMap(null);
     }
 }
-//to add class active to the list(Li item) which is clicked
-/*$("ul li").click(function()
-{
-	$("li").removeClass("active");
-	if(!$(this).hasClass("active"))
-	{
-		$(this).addClass("active");
-	}
-})*/
