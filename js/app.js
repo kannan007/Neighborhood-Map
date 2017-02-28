@@ -95,7 +95,7 @@ var ViewModel=function()
 			dataType: "jsonp",
 			cache: false,
 			url: 'https://api.foursquare.com/v2/venues/search',
-			data: 'client_id='+clientID+'&client_secret='+clientSECRET+'&v=20130815&ll='+item.position().lat+','+item.position().lng+'&query='+item.name(),
+			data: 'client_id='+clientID+'&client_secret='+clientSECRET+'&v=20160814&ll='+item.position().lat+','+item.position().lng+'&query='+item.name(),
 			success: function(data)
 			{
 				clearTimeout(api_error);
@@ -134,8 +134,7 @@ var ViewModel=function()
 	this.query.subscribe(this.search);
 	this.rendermap=function()
 	{
-		//console.log("rendered");
-		//hideListings();
+		this.hideListings();
 		var locationmap=self.locationlist();
 		var largeInfowindow = new google.maps.InfoWindow();
 	    var bounds = new google.maps.LatLngBounds();
@@ -147,7 +146,7 @@ var ViewModel=function()
 			var content=locationmap[i].content();
 			if(!(content.length>=0))
 			{
-				content="Foursquare failed to fetch results";
+				content+="Foursquare failed to fetch results";
 			}
 	        var marker = new google.maps.Marker({
 	        	map: map,
@@ -161,15 +160,13 @@ var ViewModel=function()
 
 	        // Push the marker to our array of markers.
 	        markers.push(marker);
-	        //map.panTo(markers[i].getPosition());
-	        console.log(marker.visible);
-	        map.setCenter(markers[i].getPosition());
+	        map.setCenter(marker.getPosition());
 	        // Create an onclick event to open an infowindow at each marker.
 	        marker.addListener('click', function() {
 	        	self.toggleBounce(this);
 	            self.populateInfoWindow(this, largeInfowindow);
 	        });
-	        bounds.extend(markers[i].position);
+	        bounds.extend(marker.position);
 	    }
 	    setTimeout(function ()
 	    {
@@ -177,6 +174,7 @@ var ViewModel=function()
 		}, 1300);
 	    // Extend the boundaries of the map for each marker
 	    map.fitBounds(bounds);
+	    map.setZoom(12);
 	};
 	setTimeout(function() {
 	  if(!window.google || !window.google.maps) {
@@ -226,19 +224,18 @@ var ViewModel=function()
 	    {
 	    	if(locationname==markers[i].title)
 	    	{
-	    		//markers[i].setMap(map);
-	    		markers[i].setVisible(true);
+	    		markers[i].setMap(map);
+	    		//markers[i].setVisible(true);
 	    		map.setCenter(markers[i].getPosition());
 	    		self.populateInfoWindow(markers[i],largeInfowindow);
 	    		self.toggleBounce(markers[i]);
 	    	}
 	    	else
 	    	{
-	    		markers[i].setVisible(false);
-	    		console.log(markers[i].visible);
+	    		markers[i].setMap(null);
 	    	}
 	    }
-	    map.setZoom(14);
+	    map.setZoom(15);
 	};
 	//to stop the animation bouncing after a few seconds called by timeout function
 	this.stopbouncing=function() {
@@ -249,6 +246,7 @@ var ViewModel=function()
 	this.hideListings=function()
 	{
 		for (var i = 0; i < markers.length; i++) {
+	        //markers[i].setVisible(false);
 	        markers[i].setMap(null);
 	    }
 	}
@@ -261,7 +259,7 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'),
     {
         center: {lat: 13.023487, lng: 80.176716},
-        zoom: 5
+        zoom: 15
     });
     setTimeout(function ()
     {
