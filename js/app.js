@@ -1,6 +1,8 @@
 //Initialized my favourite locations in an array object
 var clientID='01JLACFGMSPJVDDDBCXZMKGJFCFAWZFQYBFJGPTXKZ0BJ00M';
 var clientSECRET='KMZIVAGXX1D04CYEH0GJRSIZXM5I32E5IATL0XKIP0GEPNYQ';
+var map,geocoder;
+var markers=[];
 var favouritelocations=
 [
 	{
@@ -114,7 +116,7 @@ var ViewModel=function()
 		}
 		clickedlocation.className('active');
 		self.currentlocation(clickedlocation);
-		showListings(clickedlocation);
+		self.showListings(clickedlocation);
 	};
 	//Filter function to filter out the list if the user types a text in input box
 	this.search=function(value)
@@ -125,16 +127,134 @@ var ViewModel=function()
 			if(favouritelocations[x].name.toLowerCase().indexOf(value.toLowerCase())>=0)
 			{
 				self.locationlist.push(new seperatelocation(favouritelocations[x]));
-				rendermap();
+				self.rendermap();
 			}
 		}
 	};
 	this.query.subscribe(this.search);
+	this.rendermap=function()
+	{
+		//console.log("rendered");
+		//hideListings();
+		var locationmap=self.locationlist();
+		var largeInfowindow = new google.maps.InfoWindow();
+	    var bounds = new google.maps.LatLngBounds();
+		for (var i = 0; i<locationmap.length; i++)
+		{
+	        // Get the position from the location array.
+	        var position = locationmap[i].position();
+	        var title = locationmap[i].name();
+			var content=locationmap[i].content();
+			if(!(content.length>=0))
+			{
+				content="Foursquare failed to fetch results";
+			}
+	        var marker = new google.maps.Marker({
+	        	map: map,
+	        	position: position,
+	        	title: title,
+	        	content: content,
+	        	animation: google.maps.Animation.BOUNCE,
+	        	visible : true,
+	            id: i
+	        });
+
+	        // Push the marker to our array of markers.
+	        markers.push(marker);
+	        //map.panTo(markers[i].getPosition());
+	        console.log(marker.visible);
+	        map.setCenter(markers[i].getPosition());
+	        // Create an onclick event to open an infowindow at each marker.
+	        marker.addListener('click', function() {
+	        	self.toggleBounce(this);
+	            self.populateInfoWindow(this, largeInfowindow);
+	        });
+	        bounds.extend(markers[i].position);
+	    }
+	    setTimeout(function ()
+	    {
+			self.stopbouncing();
+		}, 1300);
+	    // Extend the boundaries of the map for each marker
+	    map.fitBounds(bounds);
+	};
+	setTimeout(function() {
+	  if(!window.google || !window.google.maps) {
+	    //handle script not loaded
+	    alert("Some error Google Maps not Loaded");
+	  }
+	}, 3000);
+	//this function is to bounce the marker if user is clicked one particular location on map
+	this.toggleBounce=function(marker) {
+		if (marker.getAnimation() !== null)
+		{
+	      	marker.setAnimation(null);
+	    }
+	    else
+	    {
+	        marker.setAnimation(google.maps.Animation.BOUNCE);
+	    }
+	    setTimeout(function ()
+	    {
+			marker.setAnimation(null);
+		}, 1000);
+	};
+	// This function populates the infowindow when the marker is clicked. We'll only allow
+	// one infowindow which will open at the marker that is clicked, and populate based
+	// on that markers position.
+	this.populateInfoWindow=function(marker, infowindow) {
+		// Check to make sure the infowindow is not already opened on this marker.
+		if(infowindow.marker != marker)
+		{
+			infowindow.marker = marker;
+			infowindow.setContent('<div>' + '<h2>' + marker.title + '</h2>' + marker.content + '</div>');
+			infowindow.open(map, marker);
+			// Make sure the marker property is cleared if the infowindow is closed.
+			infowindow.addListener('closeclick',function(){
+				infowindow.marker = null;
+			});
+		}
+	};
+	//We have called this function changelocation which is in ViewModel it will display the location which is clicked
+	this.showListings=function(value)
+	{
+		var locationname=value.name();
+		var bounds = new google.maps.LatLngBounds();
+		var largeInfowindow = new google.maps.InfoWindow();
+	    // Extend the boundaries of the map for each marker and display the marker
+	    for (var i = 0; i < markers.length; i++)
+	    {
+	    	if(locationname==markers[i].title)
+	    	{
+	    		//markers[i].setMap(map);
+	    		markers[i].setVisible(true);
+	    		map.setCenter(markers[i].getPosition());
+	    		self.populateInfoWindow(markers[i],largeInfowindow);
+	    		self.toggleBounce(markers[i]);
+	    	}
+	    	else
+	    	{
+	    		markers[i].setVisible(false);
+	    		console.log(markers[i].visible);
+	    	}
+	    }
+	    map.setZoom(14);
+	};
+	//to stop the animation bouncing after a few seconds called by timeout function
+	this.stopbouncing=function() {
+	    for (var i = 0; i < markers.length; i++) {
+	        markers[i].setAnimation(null);
+	    }
+	};
+	this.hideListings=function()
+	{
+		for (var i = 0; i < markers.length; i++) {
+	        markers[i].setMap(null);
+	    }
+	}
 };
 var ViewModel= new ViewModel();
 ko.applyBindings(ViewModel);
-var map,geocoder;
-var markers=[];
 function initMap() {
     // Constructor creates a new map - only center and zoom are required.
     geocoder = new google.maps.Geocoder();
@@ -145,122 +265,6 @@ function initMap() {
     });
     setTimeout(function ()
     {
-		rendermap();
+		ViewModel.rendermap();
 	}, 1200);
 };
-function rendermap()
-{
-	hideListings();
-	var locationmap=ViewModel.locationlist();
-	var largeInfowindow = new google.maps.InfoWindow();
-    var bounds = new google.maps.LatLngBounds();
-	for (var i = 0; i<locationmap.length; i++)
-	{
-        // Get the position from the location array.
-        var position = locationmap[i].position();
-        var title = locationmap[i].name();
-		var content=locationmap[i].content();
-		if(!(content.length>=0))
-		{
-			content="Foursquare failed to fetch results";
-		}
-        var marker = new google.maps.Marker({
-        	map: map,
-        	position: position,
-        	title: title,
-        	content: content,
-        	animation: google.maps.Animation.BOUNCE,
-            id: i
-        });
-
-        // Push the marker to our array of markers.
-        markers.push(marker);
-        //map.panTo(markers[i].getPosition());
-        map.setCenter(markers[i].getPosition());
-        map.setZoom(5);
-        // Create an onclick event to open an infowindow at each marker.
-        marker.addListener('click', function() {
-        	toggleBounce(this);
-            populateInfoWindow(this, largeInfowindow);
-        });
-        bounds.extend(markers[i].position);
-    }
-    setTimeout(function ()
-    {
-		stopbouncing();
-	}, 1300);
-    // Extend the boundaries of the map for each marker
-    map.fitBounds(bounds);
-};
-setTimeout(function() {
-  if(!window.google || !window.google.maps) {
-    //handle script not loaded
-    alert("Some error Google Maps not Loaded");
-  }
-}, 3000);
-//this function is to bounce the marker if user is clicked one particular location on map
-function toggleBounce(marker) {
-	if (marker.getAnimation() !== null)
-	{
-      	marker.setAnimation(null);
-    }
-    else
-    {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-    }
-    setTimeout(function ()
-    {
-		marker.setAnimation(null);
-	}, 1000);
-};
-// This function populates the infowindow when the marker is clicked. We'll only allow
-// one infowindow which will open at the marker that is clicked, and populate based
-// on that markers position.
-function populateInfoWindow(marker, infowindow) {
-	// Check to make sure the infowindow is not already opened on this marker.
-	if(infowindow.marker != marker)
-	{
-		infowindow.marker = marker;
-		infowindow.setContent('<div>' + '<h2>' + marker.title + '</h2>' + marker.content + '</div>');
-		infowindow.open(map, marker);
-		// Make sure the marker property is cleared if the infowindow is closed.
-		infowindow.addListener('closeclick',function(){
-			infowindow.marker = null;
-		});
-	}
-};
-//We have called this function changelocation which is in ViewModel it will display the location which is clicked
-function showListings(value)
-{
-	var locationname=value.name();
-	var bounds = new google.maps.LatLngBounds();
-	var largeInfowindow = new google.maps.InfoWindow();
-    // Extend the boundaries of the map for each marker and display the marker
-    for (var i = 0; i < markers.length; i++)
-    {
-    	if(locationname==markers[i].title)
-    	{
-    		markers[i].setMap(map);
-    		map.setCenter(markers[i].getPosition());
-    		populateInfoWindow(markers[i],largeInfowindow);
-    		toggleBounce(markers[i]);
-    	}
-    	else
-    	{
-    		markers[i].setMap(null);
-    	}
-    }
-    map.setZoom(14);
-};
-//to stop the animation bouncing after a few seconds called by timeout function
-function stopbouncing() {
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setAnimation(null);
-    }
-};
-function hideListings()
-{
-	for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-}
