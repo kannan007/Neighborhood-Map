@@ -109,6 +109,9 @@ var ViewModel=function()
 	//changelocation function is defined when user clicks on any list items it will call showListings function with paramater(which is clicked item)
 	this.changelocation=function(clickedlocation)
 	{
+		if (!self.currentlocation().length) { // The first time the property is an Array, and we do not need to remove the active class
+  			self.currentlocation().className('');
+		}
 		clickedlocation.className('active');
 		self.currentlocation(clickedlocation);
 		showListings(clickedlocation);
@@ -143,7 +146,7 @@ function initMap() {
     setTimeout(function ()
     {
 		rendermap();
-	}, 1100);
+	}, 1200);
 };
 function rendermap()
 {
@@ -157,7 +160,6 @@ function rendermap()
         var position = locationmap[i].position();
         var title = locationmap[i].name();
 		var content=locationmap[i].content();
-		console.log(content);
 		if(!(content.length>=0))
 		{
 			content="Foursquare failed to fetch results";
@@ -175,6 +177,7 @@ function rendermap()
         markers.push(marker);
         //map.panTo(markers[i].getPosition());
         map.setCenter(markers[i].getPosition());
+        map.setZoom(5);
         // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
         	toggleBounce(this);
@@ -186,7 +189,6 @@ function rendermap()
     {
 		stopbouncing();
 	}, 1300);
-	//map.setZoom(5);
     // Extend the boundaries of the map for each marker
     map.fitBounds(bounds);
 };
@@ -223,7 +225,7 @@ function populateInfoWindow(marker, infowindow) {
 		infowindow.open(map, marker);
 		// Make sure the marker property is cleared if the infowindow is closed.
 		infowindow.addListener('closeclick',function(){
-		infowindow.setMarker = null;
+			infowindow.marker = null;
 		});
 	}
 };
@@ -239,7 +241,6 @@ function showListings(value)
     	if(locationname==markers[i].title)
     	{
     		markers[i].setMap(map);
-    		//value.className('active');
     		map.setCenter(markers[i].getPosition());
     		populateInfoWindow(markers[i],largeInfowindow);
     		toggleBounce(markers[i]);
