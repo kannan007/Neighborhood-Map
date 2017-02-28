@@ -161,6 +161,10 @@ var ViewModel=function()
 	        // Push the marker to our array of markers.
 	        markers.push(marker);
 	        map.setCenter(marker.getPosition());
+	        if(markers[i].infoWindow)
+    		{
+    			markers[i].infoWindow.close();
+    		}
 	        // Create an onclick event to open an infowindow at each marker.
 	        marker.addListener('click', function() {
 	        	self.toggleBounce(this);
@@ -202,7 +206,12 @@ var ViewModel=function()
 	// on that markers position.
 	this.populateInfoWindow=function(marker, infowindow) {
 		// Check to make sure the infowindow is not already opened on this marker.
-		if(infowindow.marker != marker)
+		if(marker.infoWindow)
+		{
+      		marker.infoWindow.open(map, marker);
+    	}
+		// Check to make sure the infowindow is not already opened on this marker.
+		else
 		{
 			infowindow.marker = marker;
 			infowindow.setContent('<div>' + '<h2>' + marker.title + '</h2>' + marker.content + '</div>');
@@ -211,6 +220,8 @@ var ViewModel=function()
 			infowindow.addListener('closeclick',function(){
 				infowindow.marker = null;
 			});
+			// saving infowWindow instance into the marker
+			marker.infoWindow = infowindow;
 		}
 	};
 	//We have called this function changelocation which is in ViewModel it will display the location which is clicked
@@ -224,15 +235,18 @@ var ViewModel=function()
 	    {
 	    	if(locationname==markers[i].title)
 	    	{
-	    		markers[i].setMap(map);
-	    		//markers[i].setVisible(true);
+	    		markers[i].setVisible(true);
 	    		map.setCenter(markers[i].getPosition());
 	    		self.populateInfoWindow(markers[i],largeInfowindow);
 	    		self.toggleBounce(markers[i]);
 	    	}
 	    	else
 	    	{
-	    		markers[i].setMap(null);
+	    		markers[i].setVisible(false);
+	    		if(markers[i].infoWindow)
+    			{
+    				markers[i].infoWindow.close();
+    			}
 	    	}
 	    }
 	    map.setZoom(15);
@@ -246,8 +260,7 @@ var ViewModel=function()
 	this.hideListings=function()
 	{
 		for (var i = 0; i < markers.length; i++) {
-	        //markers[i].setVisible(false);
-	        markers[i].setMap(null);
+	        markers[i].setVisible(false);
 	    }
 	}
 };
