@@ -1,4 +1,17 @@
 //Initialized my favourite locations in an array object
+function initMap() {
+    // Constructor creates a new map - only center and zoom are required.
+    geocoder = new google.maps.Geocoder();
+    map = new google.maps.Map(document.getElementById('map'),
+    {
+        center: {lat: 13.023487, lng: 80.176716},
+        zoom: 15
+    });
+    setTimeout(function ()
+    {
+		viewModel.rendermap();
+	}, 1200);
+};
 var clientID='01JLACFGMSPJVDDDBCXZMKGJFCFAWZFQYBFJGPTXKZ0BJ00M';
 var clientSECRET='KMZIVAGXX1D04CYEH0GJRSIZXM5I32E5IATL0XKIP0GEPNYQ';
 var map,geocoder;
@@ -175,17 +188,11 @@ var ViewModel=function()
 	    setTimeout(function ()
 	    {
 			self.stopbouncing();
-		}, 1300);
+		}, 700);
 	    // Extend the boundaries of the map for each marker
 	    map.fitBounds(bounds);
 	    map.setZoom(12);
 	};
-	setTimeout(function() {
-	  if(!window.google || !window.google.maps) {
-	    //handle script not loaded
-	    alert("Some error Google Maps not Loaded");
-	  }
-	}, 3000);
 	//this function is to bounce the marker if user is clicked one particular location on map
 	this.toggleBounce=function(marker) {
 		if (marker.getAnimation() !== null)
@@ -264,18 +271,5 @@ var ViewModel=function()
 	    }
 	}
 };
-var ViewModel= new ViewModel();
-ko.applyBindings(ViewModel);
-function initMap() {
-    // Constructor creates a new map - only center and zoom are required.
-    geocoder = new google.maps.Geocoder();
-    map = new google.maps.Map(document.getElementById('map'),
-    {
-        center: {lat: 13.023487, lng: 80.176716},
-        zoom: 15
-    });
-    setTimeout(function ()
-    {
-		ViewModel.rendermap();
-	}, 1200);
-};
+var viewModel= new ViewModel();
+ko.applyBindings(viewModel);
