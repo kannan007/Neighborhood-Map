@@ -140,7 +140,7 @@ var ViewModel=function()
 			if(favouritelocations[x].name.toLowerCase().indexOf(value.toLowerCase())>=0)
 			{
 				self.locationlist.push(new seperatelocation(favouritelocations[x]));
-				self.rendermap();
+				self.fitermap();
 			}
 		}
 	};
@@ -174,10 +174,6 @@ var ViewModel=function()
 	        // Push the marker to our array of markers.
 	        markers.push(marker);
 	        map.setCenter(marker.getPosition());
-	        if(markers[i].infoWindow)
-    		{
-    			markers[i].infoWindow.close();
-    		}
 	        // Create an onclick event to open an infowindow at each marker.
 	        marker.addListener('click', function() {
 	        	self.toggleBounce(this);
@@ -256,7 +252,41 @@ var ViewModel=function()
     			}
 	    	}
 	    }
-	    map.setZoom(15);
+	    map.setZoom(14);
+	};
+	this.fitermap=function()
+	{
+		var locationmap=self.locationlist();
+		var largeInfowindow = new google.maps.InfoWindow();
+		var locationfilters=[];
+		var markerfilters=[];
+		locationmap.forEach(function(location)
+		{
+			locationfilters.push(location.name());
+		});
+		for(var i=0;i<markers.length;i++)
+		{
+			for(var j=0;j<locationfilters.length;j++)
+			{
+				if(markers[i].title==locationfilters[j])
+				{
+					markerfilters.push(i);
+				}
+				else
+				{
+					markers[i].setVisible(false);
+					if(markers[i].infoWindow)
+	    			{
+	    				markers[i].infoWindow.close();
+	    			}
+				}
+			}
+		}
+		for(var i=0;i<markerfilters.length;i++)
+		{
+			markers[markerfilters[i]].setVisible(true);
+		}
+		map.setZoom(12);
 	};
 	//to stop the animation bouncing after a few seconds called by timeout function
 	this.stopbouncing=function() {
