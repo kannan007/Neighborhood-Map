@@ -10,4 +10,4 @@
    * If you click on the marker of a location it will display Checkincount list which i have fetched from FourSquare API along with location title
 	
 	
-	https://kannan007.github.io/Neighborhood-Map/
+ [https://kannan007.github.io/Neighborhood-Map/]
